@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:workflow xmlns:ns2="http://vmware.com/vco/workflow" root-name="item3" object-name="workflow:name=generic" id="5b04e625-2129-465c-aed5-eca848d89441" editor-version="2.0" version="1.0.2" api-version="6.0.0" allowed-operations="vef" restartMode="1" resumeFromFailedMode="0">
+    <display-name>Create KVM machine</display-name>
+    <position y="30.0" x="20.0"/>
+    <input>
+        <param name="kvmhost" type="string"/>
+        <param name="vmname" type="string"/>
+        <param name="ncpu" type="string"/>
+        <param name="mem" type="string"/>
+        <param name="disksize" type="string"/>
+        <param name="ostype" type="string"/>
+        <param name="os" type="string"/>
+        <param name="vm_root_password" type="SecureString"/>
+    </input>
+    <output>
+        <param name="vm" type="DynamicTypes:kvm.machine"/>
+    </output>
+    <attrib name="ansible_host" type="string">
+        <value encoded="n">35.243.102.155</value>
+    </attrib>
+    <attrib name="ssh_port" type="number">
+        <value encoded="n">22.0</value>
+    </attrib>
+    <attrib name="ansible_host_username" type="string">
+        <value encoded="n">kunihiro_sada</value>
+    </attrib>
+    <attrib name="outputText" type="string">
+        <value encoded="n">failed=0</value>
+    </attrib>
+    <attrib name="resultCode" type="number">
+        <value encoded="n"/>
+    </attrib>
+    <attrib name="command" type="string">
+        <value encoded="n"></value>
+    </attrib>
+    <attrib name="password" type="SecureString">
+        <value encoded="n"></value>
+    </attrib>
+    <attrib name="passwordAuthentication" type="boolean">
+        <value encoded="n">false</value>
+    </attrib>
+    <attrib name="errorText" type="string">
+        <value encoded="n"></value>
+    </attrib>
+    <attrib name="path" type="Path">
+        <value encoded="n"/>
+    </attrib>
+    <attrib name="passphrase" type="SecureString">
+        <value encoded="n"></value>
+    </attrib>
+    <attrib name="encoding" type="string">
+        <value encoded="n"></value>
+    </attrib>
+    <workflow-item name="item0" type="end" end-mode="0" comparator="0">
+        <in-binding/>
+        <out-binding/>
+        <position y="30.0" x="540.0"/>
+    </workflow-item>
+    <workflow-item name="item3" out-name="item7" type="task" comparator="0">
+        <display-name>command作成</display-name>
+        <script encoded="false">var json = JSON.stringify({&#13;
+    kvmhost: kvmhost,&#13;
+    vm_root_password: vm_root_password,&#13;
+    vmname: vmname,&#13;
+    ncpu: ncpu,&#13;
+    mem: mem,&#13;
+    disksize: disksize,&#13;
+    os: os,&#13;
+    ostype: ostype&#13;
+});&#13;
+&#13;
+command = "ansible-playbook kvm/kvm_create.yml --extra-vars '" + json + "'";&#13;
+</script>
+        <in-binding>
+            <bind name="ncpu" type="string" export-name="ncpu"/>
+            <bind name="mem" type="string" export-name="mem"/>
+            <bind name="disksize" type="string" export-name="disksize"/>
+            <bind name="ostype" type="string" export-name="ostype"/>
+            <bind name="os" type="string" export-name="os"/>
+            <bind name="kvmhost" type="string" export-name="kvmhost"/>
+            <bind name="vmname" type="string" export-name="vmname"/>
+            <bind name="vm_root_password" type="SecureString" export-name="vm_root_password"/>
+        </in-binding>
+        <out-binding>
+            <bind name="command" type="string" export-name="command"/>
+        </out-binding>
+        <description>カスタム スクリプト機能を使用した単純なタスク。</description>
+        <position y="40.0" x="100.0"/>
+    </workflow-item>
+    <workflow-item name="item4" out-name="item0" type="task" comparator="0">
+        <display-name>Scriptable task</display-name>
+        <script encoded="false">var id = kvmhost + "." + vmname;&#13;
+var prop = new Properties()&#13;
+prop.put("id", id);&#13;
+prop.put("name", vmname);&#13;
+prop.put("kvmhost", kvmhost);&#13;
+&#13;
+System.getModule("com.vmware.coe.dynamicTypes").makeDynamicObjectFromProperties("kvm", "machine", prop);&#13;
+&#13;
+var configElementCategory = Server.getConfigurationElementCategoryWithPath("kvm");&#13;
+for each (var e in configElementCategory.allConfigurationElements) {&#13;
+    if (e.name == "machine") {&#13;
+        System.log("new config element with id:" + id)&#13;
+        e.setAttributeWithKey(id, prop);&#13;
+        break;&#13;
+    }&#13;
+}&#13;
+&#13;
+// The following line is needed for vRA custom resource. Result of setObject() will cause a failure at vRA&#13;
+vm = DynamicTypesManager.getObject("kvm", "machine", id);</script>
+        <in-binding>
+            <bind name="vmname" type="string" export-name="vmname"/>
+            <bind name="kvmhost" type="string" export-name="kvmhost"/>
+        </in-binding>
+        <out-binding>
+            <bind name="vm" type="DynamicTypes:kvm.machine" export-name="vm"/>
+        </out-binding>
+        <description>Simple task with custom script capability.</description>
+        <position y="40.0" x="400.0"/>
+    </workflow-item>
+    <workflow-item name="item7" out-name="item4" catch-name="item4" throw-bind-name="errorText" type="link" linked-workflow-id="90808080808080808080808080808080D28080800120523434428525559a3425f" comparator="0">
+        <display-name>ansible実行</display-name>
+        <script encoded="false"></script>
+        <in-binding>
+            <bind name="hostNameOrIP" type="string" export-name="ansible_host">
+                <description>Hostname or IP address of the SSH host</description>
+            </bind>
+            <bind name="port" type="number" export-name="ssh_port">
+                <description>Target port</description>
+            </bind>
+            <bind name="username" type="string" export-name="ansible_host_username">
+                <description>Username</description>
+            </bind>
+            <bind name="password" type="SecureString" export-name="password">
+                <description>Password</description>
+            </bind>
+            <bind name="cmd" type="string" export-name="command">
+                <description>The SSH command to run</description>
+            </bind>
+            <bind name="passwordAuthentication" type="boolean" export-name="passwordAuthentication">
+                <description>Sets authentication to password or key file</description>
+            </bind>
+            <bind name="path" type="Path" export-name="path">
+                <description>Path to the private key</description>
+            </bind>
+            <bind name="passphrase" type="SecureString" export-name="passphrase">
+                <description>Private key pass-phrase</description>
+            </bind>
+            <bind name="encoding" type="string" export-name="encoding">
+                <description>The encoding to be used. Leave this field empty to use the default system encoding. (Example values: "UTF-8", "ISO-8859-1"...)</description>
+            </bind>
+        </in-binding>
+        <out-binding>
+            <bind name="result" type="number" export-name="resultCode">
+                <description>0 = OK, Negative = Error, Positive = Number of values returned, after error text</description>
+            </bind>
+            <bind name="errorText" type="string" export-name="errorText">
+                <description>Error text, if any</description>
+            </bind>
+            <bind name="outputText" type="string" export-name="outputText">
+                <description>Result of running the SSH command</description>
+            </bind>
+        </out-binding>
+        <description> </description>
+        <position y="40.0" x="200.0"/>
+    </workflow-item>
+    <presentation/>
+</ns2:workflow>
