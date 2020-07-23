@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dunes-script-module name="getvRAMachinesByProject" result-type="Array/string" api-version="6.0.0" id="a0d83c6b-4bc0-40d8-8de9-457589374edb" version="1.0.2" category-name="com.vmware.cmbu.jp">
+  <param n="projectId" t="string"><![CDATA[]]></param>
+  <script encoded="false"><![CDATA[var vraUrl, username, password;
+
+for each(var configElement in Server.getConfigurationElementCategoryWithPath("Configurations").configurationElements) {
+    if (configElement.name == "vra access info") {
+        vraUrl = configElement.getAttributeWithKey("url").value;
+        username = configElement.getAttributeWithKey("username").value;
+        password = configElement.getAttributeWithKey("password").value;
+        break;
+    }
+}
+
+var token = System.getModule("com.vmware.cmbu").getvRAAccessToken(vraUrl, username, password);
+
+var result = [];
+for each(var machine in System.getModule("com.vmware.cmbu").getvRAMachines(vraUrl, token, [])) {
+    if (machine.projectId == projectId) {
+        result.push(machine.name);
+    }
+}
+return result;]]></script>
+</dunes-script-module>
