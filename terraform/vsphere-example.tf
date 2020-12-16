@@ -11,26 +11,26 @@ provider "vsphere" {
 }
 
 data "vsphere_datacenter" "dc" {
-  name = "dc1"
+  name = "w03-DC"
 }
 
 data "vsphere_datastore" "datastore" {
-  name          = "datastore1"
+  name          = "w03-w03vc01-w03-cl01-vsan01"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
 data "vsphere_compute_cluster" "cluster" {
-  name          = "cluster1"
+  name          = "w03-cl01"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
 data "vsphere_network" "network" {
-  name          = "network1"
+  name          = "seg-domain-c8-vrac-001"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
 data "vsphere_virtual_machine" "template" {
-  name          = "seed_vm1"
+  name          = "CentOS7"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
