@@ -1,0 +1,122 @@
+name: KS_NSXT_all
+version: 111
+formatVersion: 1
+inputs:
+  appserver:
+    type: object
+    title: Appサーバ
+    $ref: /ref/property-groups/compute_properties
+  dbserver:
+    type: object
+    title: DBサーバ
+    $ref: /ref/property-groups/compute_properties
+resources:
+  SG-app:
+    type: Cloud.SecurityGroup
+    properties:
+      rules:
+        - name: in-allow
+          ports:
+            - 22
+            - 80
+            - 443
+          access: Allow
+          source: ANY
+          direction: inbound
+      securityGroupType: new
+  SG-db:
+    type: Cloud.SecurityGroup
+    properties:
+      securityGroupType: new
+      rules:
+        - name: sg-db
+          ports: 22
+          access: Allow
+          source: '${resource.Jump.address}'
+          direction: inbound
+  SG_jump:
+    type: Cloud.SecurityGroup
+    properties:
+      securityGroupType: new
+      rules:
+        - name: in-ssh-allow
+          direction: inbound
+          access: Allow
+          ports: 22
+          protocol: TCP
+  LB:
+    type: Cloud.NSX.LoadBalancer
+    properties:
+      routes:
+        - protocol: HTTP
+          port: 80
+          algorithm: ROUND_ROBIN
+        - port: 443
+          protocol: HTTPS
+          algorithm: ROUND_ROBIN
+      network: '${resource.publicSeg.id}'
+      instances: '${resource.vm_app[*].id}'
+  vm_app:
+    type: Cloud.vSphere.Machine
+    dependsOn:
+      - vm_db
+    properties:
+      image: '${input.appserver.image}'
+      cpuCount: '${input.appserver.ncpu}'
+      totalMemoryMB: '${input.appserver.mem}'
+      count: '${input.appserver.count}'
+      networks:
+        - network: '${resource.Seg02.id}'
+          securityGroups:
+            - '${resource["SG-app"].id}'
+        - network: '${resource.Seg03.id}'
+  vm_db:
+    type: Cloud.vSphere.Machine
+    dependsOn:
+      - Jump
+    properties:
+      image: '${input.dbserver.image}'
+      cpuCount: '${input.dbserver.ncpu}'
+      storage:
+        bootDiskCapacityInGB: '${input.dbserver.rootDiskSize}'
+      totalMemoryMB: '${input.dbserver.mem}'
+      networks:
+        - network: '${resource.Seg03.id}'
+          securityGroups:
+            - '${resource["SG-db"].id}'
+  Jump:
+    type: Cloud.vSphere.Machine
+    properties:
+      image: CentOS7
+      flavor: small
+      networks:
+        - network: '${resource.Seg02.id}'
+          securityGroups:
+            - '${resource.SG_jump.id}'
+  publicSeg:
+    type: Cloud.NSX.Network
+    properties:
+      networkType: public
+  Seg02:
+    type: Cloud.NSX.Network
+    properties:
+      networkType: outbound
+  Seg03:
+    type: Cloud.NSX.Network
+    properties:
+      networkType: outbound
+  GW:
+    type: Cloud.NSX.Gateway
+    properties:
+      networks:
+        - '${resource.Seg02.id}'
+        - '${resource.Seg03.id}'
+  NAT:
+    type: Cloud.NSX.Nat
+    properties:
+      gateway: '${resource.GW.id}'
+      natRules:
+        - index: 0
+          protocol: TCP
+          translatedPorts: 22
+          translatedInstance: '${resource.Jump.networks[0].id}'
