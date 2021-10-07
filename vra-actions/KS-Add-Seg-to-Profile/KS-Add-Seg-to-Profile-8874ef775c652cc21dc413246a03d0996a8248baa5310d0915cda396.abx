@@ -1,0 +1,19 @@
+---
+exportVersion: "1"
+exportId: "8a5e3aae7c3acda6017c534c4c6a4e92"
+name: "KS-Add-Seg-to-Profile"
+runtime: "nodejs"
+entrypoint: "handler"
+inputs:
+  subnetIds:
+  - "353f4e35-8fc7-458a-8ead-7c4ab9b685c5"
+  componentTypeId: "Cloud.NSX.Network"
+  customProperties:
+    profile: "NONE"
+  psecret:8a13513f-ac99-4219-a99d-16399d8645ae: ""
+timeoutSeconds: 600
+deploymentTimeoutSeconds: 900
+dependencies: "{\n  \"dependencies\": {\n    \"axios\": \"^0.22.0\"\n  }\n}"
+actionType: "SCRIPT"
+provider: "aws"
+memoryInMB: 300
